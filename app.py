@@ -12,8 +12,8 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
-st.set_page_config(page_title="IMDb 影评情感分析（PyTorch LSTM）", layout="wide")
-st.title("🎬 IMDb 影评情感分析（PyTorch + LSTM）")
+st.set_page_config(page_title="IMDb The Sentiment Analysis of Movie Reviews（PyTorch LSTM）", layout="wide")
+st.title("🎬 IMDb The Sentiment Analysis of Movie Reviews（PyTorch + LSTM）")
 
 # ---------- 辅助：文本预处理 / 词表 ----------
 def simple_tokenize(text):
@@ -103,10 +103,10 @@ def load_data():
 df = load_data()
 
 # ---------- 侧边栏：筛选与超参 ----------
-st.sidebar.header("🔍 数据筛选与训练设置")
+st.sidebar.header("Data Filtering and Training Settings")
 min_len = int(df['review_len'].min()) if not df.empty else 0
 max_len = int(df['review_len'].max()) if not df.empty else 1000
-length_range = st.sidebar.slider("影评长度范围", min_len, max_len, (min_len, max_len))
+length_range = st.sidebar.slider("Length range of film reviews", min_len, max_len, (min_len, max_len))
 
 filtered = df[(df['review_len'] >= length_range[0]) & (df['review_len'] <= length_range[1])] if not df.empty else df
 
@@ -115,31 +115,31 @@ filtered = filtered[filtered['sentiment'].isin(sent_select)] if not df.empty els
 
 # 训练超参数
 st.sidebar.markdown("---")
-num_words = st.sidebar.number_input("词汇表大小 (num_words)", min_value=2000, max_value=50000, value=10000, step=1000)
-maxlen = st.sidebar.number_input("序列最大长度 (maxlen)", min_value=50, max_value=1000, value=200, step=50)
-embedding_dim = st.sidebar.selectbox("Embedding 维度", options=[50, 100, 128, 200], index=2)
-hidden_dim = st.sidebar.number_input("LSTM 隐层大小", min_value=32, max_value=512, value=128, step=32)
+num_words = st.sidebar.number_input("(num_words)", min_value=2000, max_value=50000, value=10000, step=1000)
+maxlen = st.sidebar.number_input("(maxlen)", min_value=50, max_value=1000, value=200, step=50)
+embedding_dim = st.sidebar.selectbox("Embedding dimension", options=[50, 100, 128, 200], index=2)
+hidden_dim = st.sidebar.number_input("number of LSTM hidden layers", min_value=32, max_value=512, value=128, step=32)
 batch_size = st.sidebar.selectbox("Batch size", options=[32, 64, 128], index=0)
 epochs = st.sidebar.number_input("Epochs", min_value=1, max_value=10, value=3)
-train_on_subset = st.sidebar.checkbox("仅在小子集上训练（加快演示）", value=True)
-subset_size = st.sidebar.number_input("子集样本数（若使用子集）", min_value=100, max_value=20000, value=2000, step=100)
+train_on_subset = st.sidebar.checkbox("Train only on a small subset (to speed up demonstration)", value=True)
+subset_size = st.sidebar.number_input("Number of subset samples (if subset is used）", min_value=100, max_value=20000, value=2000, step=100)
 
-st.header("📄 数据预览")
-st.write(f"筛选后样本数量：{len(filtered)}")
+st.header("Data Preview")
+st.write(f"Number of samples after filtering:{len(filtered)}")
 st.dataframe(filtered.sample(10) if len(filtered) >= 10 else filtered)
 
 # ---------- EDA 区域 ----------
-st.header("📊 EDA：数据可视化")
-st.subheader("影评长度分布")
+st.header(" EDA：Exploratory Data Analysis")
+st.subheader("length distribution of reviews（based on filtered data）")
 fig, ax = plt.subplots()
 if not filtered.empty:
     filtered['review_len'].hist(bins=50, ax=ax)
-ax.set_xlabel("lenght")
+ax.set_xlabel("length of review")
 ax.set_ylabel("number of reviews")
 st.pyplot(fig)
 
-st.subheader("正/负面影评词云（基于筛选数据）")
-sent_choice = st.radio("选择词云情感", ['positive', 'negative'])
+st.subheader("positive/negative word cloud")
+sent_choice = st.radio("choose positive or negative", ['positive', 'negative'])
 text = " ".join(filtered[filtered['sentiment'] == sent_choice]['review'].astype(str).tolist()) if not filtered.empty else ""
 if text.strip():
     wc = WordCloud(width=800, height=300, background_color='white').generate(text)
@@ -148,9 +148,10 @@ if text.strip():
     ax2.axis('off')
     st.pyplot(fig2)
 else:
-    st.info("当前筛选无数据来生成词云。")
+    #use English
+    st.info("no data available for the selected sentiment.")
 
-st.subheader("情感比例柱状图")
+st.subheader("sentiment distribution")
 if not filtered.empty:
     vc = filtered['sentiment'].value_counts()
     fig3, ax3 = plt.subplots()
@@ -158,18 +159,18 @@ if not filtered.empty:
     ax3.set_ylabel("number")
     st.pyplot(fig3)
 else:
-    st.info("暂无数据。")
+    st.info("no data available after filtering.")
 
 # ---------- 模型训练 / 加载 / 预测 ----------
-st.header("🤖 PyTorch LSTM 模型训练与预测")
+st.header("LSTM model training and prediction")
 
 model_path = "pytorch_lstm_model.pt"
 vocab_path = "vocab.json"
 
-use_existing = st.checkbox("使用已保存模型（若存在）", value=True)
+use_existing = st.checkbox("use model that exists", value=True)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-st.write(f"运行设备：{device}")
+st.write(f"device：{device}")
 
 model = None
 vocab = None
@@ -183,22 +184,22 @@ if use_existing and os.path.exists(model_path) and os.path.exists(vocab_path):
         model = LSTMSentiment(vocab_size=vocab_size, embedding_dim=embedding_dim, hidden_dim=hidden_dim).to(device)
         model.load_state_dict(torch.load(model_path, map_location=device))
         model.eval()
-        st.success("已加载已有模型与词表。")
+        st.success("The existing model and vocabulary have been loaded.")
     except Exception as e:
-        st.error(f"加载模型或词表失败：{e}")
+        st.error(f"failed：{e}")
         model = None
         vocab = None
 
 # 训练触发
-if st.button("训练模型"):
+if st.button("training new model"):
     if df.empty:
-        st.error("数据缺失，无法训练。请将 IMDB Dataset.csv 放到项目目录。")
+        st.error("data is empty, cannot train model.")
     else:
         # 选择数据（可用全量或子集）
         data = df.sample(n=subset_size, random_state=42) if train_on_subset else df
         texts = data['review'].astype(str).tolist()
         labels = data['label'].astype(int).tolist()
-        st.info(f"准备训练：样本数={len(texts)}，词汇表大小={num_words}，序列长度={maxlen}")
+        st.info(f"begin to train：num of input={len(texts)}，length of vocabulary={num_words}，length of sequence={maxlen}")
 
         # build vocab
         vocab = build_vocab(texts, num_words=num_words)
@@ -258,11 +259,11 @@ if st.button("训练模型"):
                 wait = 0
                 # 保存模型
                 torch.save(model.state_dict(), model_path)
-                st.write("已保存当前最优模型。")
+                st.write("best model saved.")
             else:
                 wait += 1
                 if wait >= patience:
-                    st.write("Early stopping 触发，停止训练。")
+                    st.write("Early stopping triggered.")
                     break
 
         # 绘制训练曲线
@@ -274,17 +275,17 @@ if st.button("训练模型"):
         ax_hist.legend()
         st.pyplot(fig_hist)
 
-        st.success("训练完成（或提前停止）。模型与词表已保存到项目目录。")
+        st.success("Model training completed.")
 
 # ---------- 单条文本预测 ----------
-st.subheader("单条影评预测")
-input_text = st.text_area("在此输入要预测的影评文本（例如：This movie was great!）")
-if st.button("预测文本情感（PyTorch 模型）"):
+st.subheader("Single Text Prediction")
+input_text = st.text_area("please enter the movie review text for sentiment prediction:", height=150)
+if st.button("Predict Sentiment"):
     if input_text.strip() == "":
-        st.warning("请先输入文本。")
+        st.warning("please enter valid text.")
     else:
         if model is None or vocab is None:
-            st.error("未检测到已加载或训练的模型与词表。请先训练模型或勾选加载已有模型。")
+            st.error("No model available. Please train a new model or load an existing one.")
         else:
             seq = texts_to_sequences([input_text], vocab, maxlen=maxlen)
             x_tensor = torch.tensor(seq, dtype=torch.long).to(device)
@@ -293,7 +294,4 @@ if st.button("预测文本情感（PyTorch 模型）"):
                 pred = model(x_tensor)
                 prob = float(pred.cpu().numpy()[0])
                 label = "Positive" if prob >= 0.5 else "Negative"
-                st.success(f"预测：{label}（正类概率={prob:.3f}）")
-
-st.markdown("---")
-st.markdown("**提示**：本应用为教学演示。若要在完整数据上训练并取得较好效果，请在 GPU 环境（例如 Colab）中运行更长时间与更大模型。")
+                st.success(f"prediction：{label}（probability={prob:.3f}）")

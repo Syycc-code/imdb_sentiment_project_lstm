@@ -1,8 +1,4 @@
 
----
-
-### 5) `presentation/slides_notes.md`（PPT 文案）
-我把 PPT 的四页要点写成了 Markdown（便于复制进 PowerPoint）——保存为 `presentation/slides_notes.md`：
 
 ```markdown
 # Slide 1 — 封面
