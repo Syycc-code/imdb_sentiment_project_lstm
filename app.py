@@ -134,8 +134,8 @@ st.subheader("影评长度分布")
 fig, ax = plt.subplots()
 if not filtered.empty:
     filtered['review_len'].hist(bins=50, ax=ax)
-ax.set_xlabel("影评长度")
-ax.set_ylabel("数量")
+ax.set_xlabel("lenght")
+ax.set_ylabel("number of reviews")
 st.pyplot(fig)
 
 st.subheader("正/负面影评词云（基于筛选数据）")
@@ -155,7 +155,7 @@ if not filtered.empty:
     vc = filtered['sentiment'].value_counts()
     fig3, ax3 = plt.subplots()
     ax3.bar(vc.index, vc.values, color=['green', 'red'])
-    ax3.set_ylabel("数量")
+    ax3.set_ylabel("number")
     st.pyplot(fig3)
 else:
     st.info("暂无数据。")
