@@ -1,4 +1,4 @@
-# app.py (PyTorch + LSTM 版本)
+# app.py 
 import os
 import json
 import streamlit as st
@@ -89,11 +89,11 @@ class LSTMSentiment(nn.Module):
 @st.cache_data
 def load_data():
     if not os.path.exists("IMDB Dataset.csv"):
-        st.warning("请将 'IMDB Dataset.csv' 放到应用根目录后再运行（从 Kaggle 下载）。")
+        st.warning("please put 'IMDB Dataset.csv' in the root directory of the app and run again (download from Kaggle).")
         return pd.DataFrame({"review": [], "sentiment": []})
     df = pd.read_csv("IMDB Dataset.csv")
     if 'review' not in df.columns or 'sentiment' not in df.columns:
-        st.error("CSV 文件缺少 'review' 或 'sentiment' 列，请确认数据文件格式。")
+        st.error("CSV file is missing 'review' or 'sentiment' column, please check the data file format.")
         return pd.DataFrame({"review": [], "sentiment": []})
     df = df[['review', 'sentiment']].dropna()
     df['label'] = df['sentiment'].map({'positive': 1, 'negative': 0})
@@ -110,7 +110,7 @@ length_range = st.sidebar.slider("Length range of film reviews", min_len, max_le
 
 filtered = df[(df['review_len'] >= length_range[0]) & (df['review_len'] <= length_range[1])] if not df.empty else df
 
-sent_select = st.sidebar.multiselect("选择情感", options=['positive', 'negative'], default=['positive', 'negative'])
+sent_select = st.sidebar.multiselect("choose emotion", options=['positive', 'negative'], default=['positive', 'negative'])
 filtered = filtered[filtered['sentiment'].isin(sent_select)] if not df.empty else filtered
 
 # 训练超参数
@@ -122,7 +122,8 @@ hidden_dim = st.sidebar.number_input("number of LSTM hidden layers", min_value=3
 batch_size = st.sidebar.selectbox("Batch size", options=[32, 64, 128], index=0)
 epochs = st.sidebar.number_input("Epochs", min_value=1, max_value=10, value=3)
 train_on_subset = st.sidebar.checkbox("Train only on a small subset (to speed up demonstration)", value=True)
-subset_size = st.sidebar.number_input("Number of subset samples (if subset is used）", min_value=100, max_value=20000, value=2000, step=100)
+subset_size = st.sidebar.number_input("Number of subset samples (if subset is used）", 
+                                      min_value=100, max_value=20000, value=2000, step=100)
 
 st.header("Data Preview")
 st.write(f"Number of samples after filtering:{len(filtered)}")
